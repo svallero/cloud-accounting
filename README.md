@@ -1,4 +1,5 @@
-bubble-wall
+Cloud Accounting
 ===========
 
-Elastic Tier2.
+Backup accounting data in MySQL DB suited for Logstash.
+Handle dynamic quotas.
