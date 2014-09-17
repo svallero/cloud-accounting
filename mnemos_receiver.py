@@ -25,6 +25,7 @@
 ###############################################################################
 
 # Standard python libs
+import ast
 import gzip
 import base64
 import mimetypes
@@ -35,6 +36,10 @@ import boto
 import time
 import sys
 import os
+import pwd
+import pika
+import smtplib
+from email.mime.text import MIMEText
 import subprocess
 from subprocess import Popen, PIPE
 from ConfigParser import SafeConfigParser
@@ -54,7 +59,7 @@ class App():
         self.stdout_path = '/dev/tty'
         self.stderr_path = '/dev/tty'
         self.pidfile_timeout = 5
-        self.pidfile_path = '/tmp/mnemos.pid' 
+        self.pidfile_path = '/tmp/mnemos_receiver.pid' 
     
     def run(self):
         logger.info("**************************************")
@@ -62,25 +67,10 @@ class App():
         logger.info("**************************************")
         print_config()       
         logger.info("--------------------------------------")
-         
-        # LOAD CLOUD PLUGIN
-        logger.info('Loading cloud plugin...')
-        try:
-           # See: http://stackoverflow.com/questions/6677424/how-do-i-import-variable-packages-in-python-like-using-variable-variables-i
-           cloud_plugin = getattr(__import__('plugins', fromlist=[ cloud_name ]), cloud_name)
-        except (ImportError, AttributeError) as e:
-           logger.fatal('Cannot find cloud plugin: '+cloud_name+'')
-           sys.exit(2)
-
-        logger.info('Loaded cloud plugin: '+cloud_name+'')
-
-        # Init cloud plugin
-        logger.info('Init cloud plugin...')
-        cloud_plugin.init(cloud_cf,logger)
-        logger.info("--------------------------------------")
-
+        
         # LOAD DB PLUGIN
         logger.info('Loading database plugin...')
+        global db_plugin
         try:
            db_plugin = getattr(__import__('plugins', fromlist=[ db_name ]), db_name)
         except (ImportError, AttributeError) as e:
@@ -94,16 +84,25 @@ class App():
         db_plugin.init(db_cf,logger)
         logger.info("**************************************")
 
+        # Initialize connection to RabbitMQ
+        global connection
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        global channel
+        channel=connection.channel() 
+        # add a time-out after which you stop consuming (5 min)
+        # at next loop you start consuming again
+        # this is to allow re-processing of failed message deliveries (mainly to database) 
+        connection.add_timeout(300, on_timeout)
+
         # MAIN LOOP
         while True:
-            # Get accounting info
-            val=cloud_plugin.get_accounting_data()
-            
-            insert=db_plugin.insert_accounting_data(val)
+            channel.basic_consume(mnemos_callback,queue='mnemos',no_ack=False)
+            channel.basic_consume(alarms_callback,queue='alarms',no_ack=False)
+            channel.basic_consume(summary_callback,queue='summary',no_ack=False)
+            channel.basic_consume(summarydb_callback,queue='summary_db',no_ack=False)
+            logger.info('Start consuming...')  
+            channel.start_consuming() # this never exits...
 
-            # Sleep   
-            logger.info('Sleeping '+str(sleep_time)+'s...')
-            time.sleep(int(sleep_time))
 
 # Configuration ---------------------------------------------------------------
 def configure(config_file):
@@ -118,8 +117,8 @@ def configure(config_file):
           sys.exit(1)
        for key,val in cf_parser.items('mnemos'): 
          globals() [key]=val
-       global cloud_cf
-       cloud_cf = cf_parser.items(cloud_name)
+       global logfile
+       logfile=''+logdir+'/mnemos_receiver.log'
        global db_cf
        db_cf = cf_parser.items(db_name)
 
@@ -128,8 +127,7 @@ def print_config():
    logger.info('CONFIGURATION:')
    logger.info('[mnemos]') 
    logger.info('   sleep_time='+str(sleep_time)+'') 
-   logger.info('   logfile='+logfile+'')
-   logger.info('   cloud_name='+cloud_name+'')
+   logger.info('   logdir='+logdir+'')
    logger.info('   db_name='+db_name+'')
 
 # Logger ---------------------------------------------------------------------- 
@@ -188,20 +186,60 @@ class MyDaemonRunner(runner.DaemonRunner):
         define_logger(log_level, logfile) 
 
 
-# Safely run a shell command --------------------------------------------------
-def run_shell_cmd(command):
-   try:
-      proc = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-      out,err= proc.communicate()
-      for outline in out.splitlines():
-         logger.debug(outline)
-      for errline in err.splitlines():
-         logger.debug(errline)
-   except:
-      logger.error('Running command '+command+'')
+# Rabbit stuff ----------------------------------------------------------------
+def mnemos_callback(ch, method, properties, body):
+    payload=ast.literal_eval(body)
+    insert=db_plugin.insert_accounting_data(payload)
+    if not insert:
+       logger.debug('[mnemos] Processed %r' % (body,))
+       channel.basic_ack(delivery_tag = method.delivery_tag)
 
+def summarydb_callback(ch, method, properties, body):
+    payload=ast.literal_eval(body)
+    insert=db_plugin.insert_summary_data(payload)
+    if not insert:
+       logger.debug('[summary_db] Processed %r' % (body,))
+       channel.basic_ack(delivery_tag = method.delivery_tag)
+    
+
+def alarms_callback(ch, method, properties, body):
+    error=0
+    try:
+       msg = MIMEText(body)
+       msg['Subject'] = 'MNEMOS: quota exceeded!'
+       msg['From'] = mail_sender
+       msg['To'] = mail_receiver
+ 
+
+       receiver = mail_receiver.split(',')      
+       # Send the message via our own SMTP server, but don't include the
+       # envelope header.
+       s = smtplib.SMTP('localhost')
+       #s.sendmail(mail_sender, receiver, msg.as_string())
+       s.quit()
+    except: 
+       error=1
+    if not error:
+       logger.info('[alarms] Processed %r' % (body,))
+       channel.basic_ack(delivery_tag = method.delivery_tag)
+
+def summary_callback(ch, method, properties, body):
+    logger.info('[summary] Received %r' % (body,))
+    channel.basic_ack(delivery_tag = method.delivery_tag)
+  
+def on_timeout():
+  channel.stop_consuming()
+  logger.info('Stop consuming...')
 
 # ENTRY POINT #
+
+# Switch user
+uid = pwd.getpwnam('mnemos')[2]
+if not uid:
+   print '== FATAL: user \'mnemos\' does not exist! =='
+   sys.exit(1)
+os.setuid(uid)
+
 # Define daemon runner --------------------------------------------------------
 app = App()
 daemon_runner = MyDaemonRunner(app)

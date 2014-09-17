@@ -16,10 +16,11 @@ def init(cf_plugin,logging):
   configure(cf_plugin) 
   logger.info('OPENNEBULA - Plugin initialized!')
 
-def get_accounting_data():
+def get_accounting_data(now):
    retval={}
    import xmlrpclib
    import os
+   import time
    from lxml import objectify
    # connect to endpoint
    server=xmlrpclib.ServerProxy(endpoint)
@@ -82,7 +83,7 @@ def get_accounting_data():
          # something went wrong...
          stop_time=1 # to avoid inserting in db over and over...  
       #print vars(e.VM)
-      retval[ne]={'id': id, 'name': name, 'username': username, 'groupname': groupname, 'cpus': cpus, 'memory': mem, 'host': host, 'image': image, 'ndisks': ndisks, 'disksize': tot_disk_size, 'starttime': start_time, 'lcmstate': lcm_state, 'lastpolltime': last_poll_time, 'stoptime': stop_time}
+      retval[ne]={'id': id, 'name': name, 'username': username, 'groupname': groupname, 'cpus': cpus, 'memory': mem, 'host': host, 'image': image, 'ndisks': ndisks, 'disksize': tot_disk_size, 'starttime': start_time, 'lcmstate': lcm_state, 'lastpolltime': last_poll_time, 'stoptime': stop_time, 'timestamp': now}
 
    return retval
 

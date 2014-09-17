@@ -1,0 +1,140 @@
+#! /bin/bash
+#
+# Author: svallero@to.infn.it
+#
+# /etc/init.d/mnemos
+#
+### BEGIN INIT INFO
+# Provides: mnemos
+# Required-Start: 
+# Should-Start: 
+# Required-Stop: 
+# Should-Stop:
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Short-Description: mnemos daemon process
+# Description:    Runs up the mnemos daemon process
+### END INIT INFO
+
+# Some color
+red='\e[0;31m'
+green='\e[0;32m'
+orange='\e[0;33m'
+blue='\e[0;34m'
+magenta='\e[0;35m'
+cyan='\e[0;36m'
+nc='\e[0m' # No Color
+
+
+# Default control variables
+# This should be run as root, because the mnemos daemons need to set 
+# the uid of 'mnemos' to run and only root can do that...
+if [ `whoami` != 'root' ] ; then
+   echo '== FATAL: you should be root to use this service! =='
+   exit 1
+fi
+
+export path_to_daemon="/home/cloudadm/devel/cloud-accounting/"
+export config_file="/home/cloudadm/devel/cloud-accounting/etc/mnemos.cfg"
+export log_level="INFO"
+
+case "$1" in
+  start)
+    # Start publisher/receiver daemons 
+    echo -e "${green}Starting publisher...${nc}"
+    python $path_to_daemon/mnemos_publisher.py start -l $log_level -c $config_file
+    sleep 2
+    echo -e "${green}Starting receiver...${nc}"
+    python $path_to_daemon/mnemos_receiver.py start -l $log_level -c $config_file
+    sleep 1
+    exit $?
+    ;;
+  stop)
+    # Stop publisher/receiver daemons 
+    echo -e "${blue}Stopping publisher...${nc}"
+    python $path_to_daemon/mnemos_publisher.py stop
+    sleep 1
+    echo -e "${blue}Stopping receiver...${nc}"
+    python $path_to_daemon/mnemos_receiver.py stop
+    exit $?
+    ;;
+  restart)
+    # do not use python-daemon restart function
+    # because it does not reload config file
+    #python $path_to_daemon/syncVSEd.py restart
+    echo -e "${blue}Stopping publisher...${nc}"
+    python $path_to_daemon/mnemos_publisher.py stop
+    sleep 1
+    echo -e "${blue}Stopping receiver...${nc}"
+    python $path_to_daemon/mnemos_receiver.py stop
+    sleep 1
+    echo -e "${green}Starting publisher...${nc}"
+    python $path_to_daemon/mnemos_publisher.py start -l $log_level -c $config_file
+    sleep 2
+    echo -e "${green}Starting receiver...${nc}"
+    python $path_to_daemon/mnemos_receiver.py start -l $log_level -c $config_file
+    sleep 1
+    exit $?
+    ;;
+  status)
+    echo -e "${nc}Querying publisher status...${nc}"
+    out=$( ps -e -o pid,command | grep "mnemos_publisher.py" | grep "start")
+  if [ "$out" == '' ] ; then
+    echo -e "${red}mnemos_publisher is not running!${nc}"
+  else
+    export pid=$(echo $out | awk '{ print $1 }')
+    echo -e "${green}mnemos_publisher running with PID $pid!${nc}"
+  fi
+
+    echo -e "${nc}Querying receiver status...${nc}"
+    out=$( ps -e -o pid,command | grep "mnemos_receiver.py" | grep "start")
+  if [ "$out" == '' ] ; then
+    echo -e "${red}mnemos_receiver is not running!${nc}"
+  else
+    export pid=$(echo $out | awk '{ print $1 }')
+    echo -e "${green}mnemos_receiver running with PID $pid!${nc}"
+  fi
+    exit $?
+    ;;
+  plog)
+    echo -e "${magenta}Getting publisher logs...${nc}"
+    file=`cat $config_file | grep "logdir" | awk -F"=" '{print $2}'`
+    tail -f $file/mnemos_publisher.log | while read line
+      do
+  	if [[ $line == *DEBUG* ]];then
+           echo -e "${green}$line${nc}";
+        elif [[ $line == *INFO* ]];then
+           echo -e "${nc}$line${nc}";
+        elif [[ $line == *WARNING* ]];then
+           echo -e "${orange}$line${nc}";
+        elif [[ $line == *ERROR* ]];then
+           echo -e "${red}$line${nc}";
+        fi
+done
+    exit $?
+    ;;
+  rlog)
+    echo -e "${magenta}Getting receiver logs...${nc}"
+    file=`cat $config_file | grep "logdir" | awk -F"=" '{print $2}'`
+    tail -f $file/mnemos_receiver.log | while read line
+      do
+  	if [[ $line == *DEBUG* ]];then
+           echo -e "${green}$line${nc}";
+        elif [[ $line == *INFO* ]];then
+           echo -e "${nc}$line${nc}";
+        elif [[ $line == *WARNING* ]];then
+           echo -e "${orange}$line${nc}";
+        elif [[ $line == *ERROR* ]];then
+           echo -e "${red}$line${nc}";
+        fi
+done
+    exit $?
+    ;;
+  *)
+    # Refuse to do other stuff
+    echo -e "${magenta}Usage: {start|stop|restart|status|plog(publisher logs)|rlog(receiver logs)}${nc}"
+    exit 1
+    ;;
+esac
+
+exit 0
