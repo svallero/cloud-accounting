@@ -21,7 +21,7 @@
 #                                                                             #
 # python mnemos_publisher.py start                                            # 
 #                                                                             #
-# Init script: TODO                                                           #
+# Init script: bin/mnemos                                                     #
 #                                                                             #
 # Mailto: svallero@to.infn.it                                                 #
 #                                                                             #
@@ -126,7 +126,6 @@ class App():
             # Send to rabbit queue (at each loop)
             logger.info('Publishing data in queue \'mnemos\'...')
             for message in val.items():
-               #logger.info('MESSAGE'+str(message[1])+'')
                channel.basic_publish(exchange='',routing_key='mnemos',body=str(message[1]), properties=pika.BasicProperties(delivery_mode = 2))
                logger.debug('Sent: '+str(message[1])+'')
 

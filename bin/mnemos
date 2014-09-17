@@ -34,6 +34,13 @@ if [ `whoami` != 'root' ] ; then
    exit 1
 fi
 
+# Check if user 'mnemos' exists, if not create it
+id -u mnemos > /dev/null
+if [ $? != 0 ]; then 
+   echo '== INFO: creating user mnemos... =='
+   adduser -M -s /sbin/nologin mnemos
+fi
+
 export path_to_daemon="/home/cloudadm/devel/cloud-accounting/"
 export config_file="/home/cloudadm/devel/cloud-accounting/etc/mnemos.cfg"
 export log_level="INFO"
@@ -52,10 +59,10 @@ case "$1" in
   stop)
     # Stop publisher/receiver daemons 
     echo -e "${blue}Stopping publisher...${nc}"
-    python $path_to_daemon/mnemos_publisher.py stop
+    python $path_to_daemon/mnemos_publisher.py stop  &> /dev/null
     sleep 1
     echo -e "${blue}Stopping receiver...${nc}"
-    python $path_to_daemon/mnemos_receiver.py stop
+    python $path_to_daemon/mnemos_receiver.py stop  &> /dev/null
     exit $?
     ;;
   restart)
@@ -63,10 +70,10 @@ case "$1" in
     # because it does not reload config file
     #python $path_to_daemon/syncVSEd.py restart
     echo -e "${blue}Stopping publisher...${nc}"
-    python $path_to_daemon/mnemos_publisher.py stop
+    python $path_to_daemon/mnemos_publisher.py stop  &> /dev/null
     sleep 1
     echo -e "${blue}Stopping receiver...${nc}"
-    python $path_to_daemon/mnemos_receiver.py stop
+    python $path_to_daemon/mnemos_receiver.py stop  &> /dev/null
     sleep 1
     echo -e "${green}Starting publisher...${nc}"
     python $path_to_daemon/mnemos_publisher.py start -l $log_level -c $config_file
