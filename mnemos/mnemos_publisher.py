@@ -215,6 +215,11 @@ def configure(config_file):
        # logfile
        global logfile
        logfile=''+logdir+'/mnemos_publisher.log'
+       # touch logfile 
+       if not os.path.exists(os.path.dirname(logfile)):
+          os.system('sudo mkdir -p '+os.path.dirname(logfile)+'')
+       os.system('sudo touch '+logfile+'')
+       os.system('sudo chown mnemos:mnemos '+logfile+'')
        # config cloud plugin
        global cloud_cf
        cloud_cf = cf_parser.items(cloud_name)

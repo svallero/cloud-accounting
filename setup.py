@@ -5,7 +5,9 @@
 #    Author: Sara Vallero <svallero@to.infn.it>
 #    
 
+from glob import glob
 from setuptools import setup
+#from setuptools.command.install import install
 
 if __name__ == '__main__':
 
@@ -19,14 +21,17 @@ if __name__ == '__main__':
       author='Sara Vallero',
       author_email='svallero@to.infn.it',
       url='https://github.com/svallero/cloud-accounting',
-      packages = [ 'mnemos' ],      
-      include_package_data = True,
+      packages = [ 'mnemos', ],      
+      #packages = find_packages(),      
       scripts=['mnemos/bin/mnemos',
                'mnemos/mnemos_publisher.py',
                'mnemos/mnemos_receiver.py',  
                ],
-      data_files=[(ETC + '/mnemos', 'mnemos/etc/*.cfg'),
+      data_files=[(ETC + '/mnemos', glob('mnemos/etc/*.cfg')),
                  ],
+      include_package_data = True,
+      #py_modules = ['mnemos'],
+
       # Dependencies
      install_requires = [
         'pika',

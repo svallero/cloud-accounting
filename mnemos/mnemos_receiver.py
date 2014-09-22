@@ -119,6 +119,11 @@ def configure(config_file):
          globals() [key]=val
        global logfile
        logfile=''+logdir+'/mnemos_receiver.log'
+       # touch logfile 
+       if not os.path.exists(os.path.dirname(logfile)):
+          os.system('sudo mkdir -p '+os.path.dirname(logfile)+'')
+       os.system('sudo touch '+logfile+'')
+       os.system('sudo chown mnemos:mnemos '+logfile+'')
        global db_cf
        db_cf = cf_parser.items(db_name)
 

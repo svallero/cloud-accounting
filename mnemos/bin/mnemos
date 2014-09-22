@@ -41,6 +41,14 @@ if [ $? != 0 ]; then
    adduser -M -s /sbin/nologin mnemos
 fi
 
+# adding mnemos to sudoers
+sh -c "echo \"%mnemos ALL=(ALL) NOPASSWD: ALL\" >> /etc/sudoers"
+
+# create dir for pid file (path is hardcoded)
+pid_dir='/var/run/mnemos'
+mkdir -p $pid_dir
+chown mnemos:mnemos $pid_dir
+
 export path_to_daemon="/usr/bin"
 export config_file="/etc/mnemos/mnemos.cfg"
 export log_level="INFO"
