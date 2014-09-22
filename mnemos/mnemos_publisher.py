@@ -75,7 +75,7 @@ class App():
         # LOAD CLOUD PLUGIN
         logger.info('Loading cloud plugin...')
         try:
-           cloud_plugin = getattr(__import__('plugins', fromlist=[ cloud_name ]), cloud_name)
+           cloud_plugin = getattr(__import__('mnemos.plugins', fromlist=[ cloud_name ]), cloud_name)
         except (ImportError, AttributeError) as e:
            logger.fatal('Cannot find cloud plugin: '+cloud_name+'')
            sys.exit(2)
@@ -91,7 +91,7 @@ class App():
         logger.info('Loading database plugin...')
         global db_plugin
         try:
-           db_plugin = getattr(__import__('plugins', fromlist=[ db_name ]), db_name)
+           db_plugin = getattr(__import__('mnemos.plugins', fromlist=[ db_name ]), db_name)
         except (ImportError, AttributeError) as e:
            logger.fatal('Cannot find database plugin: '+db_name+'')
            sys.exit(2)
