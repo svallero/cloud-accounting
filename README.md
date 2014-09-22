@@ -5,17 +5,24 @@ Backup accounting data in MySQL DB suited for Logstash.
 Handle dynamic quotas.
 
 PRE-REQUISITES:
+
 On your server you should have installed:
+
 - MySQL (configure a user with create + insert privileges that will be used by Mnemos)
 - rabbitmq-server
+
 You also need to have installed the package "MySQL-python", i.e. on CentOS: 
+
 - yum install MySQL-python --enablerepo=epel
 
 INSTALL
+
 The python way (as root, though the daemons will run as unprivileged user "mnemos"):
+
 - python setup.py install
 
 RUN
+
 - mnemos start|stop|status
 - or add /usr/bin/mnemos to your start-up scripts (i.e. in /etc/init.d/)
 
