@@ -59,7 +59,7 @@ class App():
         self.stdout_path = '/dev/tty'
         self.stderr_path = '/dev/tty'
         self.pidfile_timeout = 5
-        self.pidfile_path = '/tmp/mnemos_receiver.pid' 
+        self.pidfile_path = '/var/run/mnemos/mnemos_receiver.pid' 
     
     def run(self):
         logger.info("**************************************")

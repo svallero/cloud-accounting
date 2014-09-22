@@ -41,8 +41,8 @@ if [ $? != 0 ]; then
    adduser -M -s /sbin/nologin mnemos
 fi
 
-export path_to_daemon="/home/cloudadm/devel/cloud-accounting/"
-export config_file="/home/cloudadm/devel/cloud-accounting/etc/mnemos.cfg"
+export path_to_daemon="/usr/bin"
+export config_file="/etc/mnemos/mnemos.cfg"
 export log_level="INFO"
 
 case "$1" in
@@ -68,7 +68,6 @@ case "$1" in
   restart)
     # do not use python-daemon restart function
     # because it does not reload config file
-    #python $path_to_daemon/syncVSEd.py restart
     echo -e "${blue}Stopping publisher...${nc}"
     python $path_to_daemon/mnemos_publisher.py stop  &> /dev/null
     sleep 1
