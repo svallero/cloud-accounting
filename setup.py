@@ -36,5 +36,6 @@ if __name__ == '__main__':
      install_requires = [
         'pika',
         'python-daemon'
-     ]
+     ],
+    
    )
