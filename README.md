@@ -24,7 +24,7 @@ The python way (as root, though the daemons will run as unprivileged user "mnemo
 The rpm way:
 
 - yum install rpm-build
-- python setup.py bdist --format=rpm --fix-python
+- python setup.py bdist_rpm --fix-python
 
 You can find you rpm in dist, so you can install it, i.e.:
 - yum localinstall dist/mnemos-0.0.0-1.noarch.rpm --enablerepo=epel
