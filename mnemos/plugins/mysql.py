@@ -96,11 +96,11 @@ def get_summary(username,starttime):
       else:
          stop = vmpoll
       period=stop-start
-      if period < 0:
-         print '*** DEBUG period is < 0 !!! ***'
+      #if period < 0:
+      #   print '*** DEBUG period is < 0 !!! ***'
       cputime += (cpu*period)
-      if username=='svallero': 
-         print val[0],cpu*period
+      #if username=='svallero': 
+         #print val[0],cpu*period
       memtime += (mem*period)
       disktime += (disk*period)
    

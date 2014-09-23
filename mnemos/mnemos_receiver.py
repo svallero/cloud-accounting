@@ -220,7 +220,7 @@ def alarms_callback(ch, method, properties, body):
        # Send the message via our own SMTP server, but don't include the
        # envelope header.
        s = smtplib.SMTP('localhost')
-       #s.sendmail(mail_sender, receiver, msg.as_string())
+       s.sendmail(mail_sender, receiver, msg.as_string())
        s.quit()
     except: 
        error=1
