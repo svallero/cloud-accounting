@@ -15,6 +15,10 @@ You also need to have installed the package "MySQL-python", i.e. on CentOS:
 
 - yum install MySQL-python --enablerepo=epel
 
+and other modules you better get from Pypi because in yum are broken...
+- pip install pika
+- pip install python-daemon
+
 INSTALL
 
 The python way (as root, though the daemons will run as unprivileged user "mnemos"):
