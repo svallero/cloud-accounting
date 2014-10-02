@@ -138,7 +138,7 @@ def insert_accounting_data(values):
 
      if not tmp:
         # if there is no previous entry...
-        last_lastpolltime=values['starttime'] #WRONG THIS SHOULD BE STARTTIME
+        last_lastpolltime=values['starttime'] 
         last_stoptime=0
         #deltat=values['stoptime']-values['lastpolltime'] # here starttime-stoptime or starttime-polltime
         #if deltat < 0:
@@ -191,9 +191,10 @@ def insert_summary_data(values):
      # plus some other useful var
      left=values['maxcputime']-values['cputime']
      cur.execute('''insert into summary values (0,%s,%s,%s,%s)''', (tmp[0],values['stoptime'], 'left', left))
-     mean_cputime=values['cputime']/(values['stoptime']-values['starttime']) 
+     mean_cputime=float(values['cputime'])/float(values['stoptime']-values['starttime']) 
+
      cur.execute('''insert into summary values (0,%s,%s,%s,%s)''', (tmp[0],values['stoptime'], 'mean_cputime', mean_cputime))
-     mean_maxcputime=values['maxcputime']/(365*86400)
+     mean_maxcputime=float(values['maxcputime'])/float(365*86400)
      cur.execute('''insert into summary values (0,%s,%s,%s,%s)''', (tmp[0],values['stoptime'], 'mean_maxcputime', mean_maxcputime))
   except Exception as err:
      logger.error('MYSQL - ERROR: insert_summary_data -> '+str(err)+'')

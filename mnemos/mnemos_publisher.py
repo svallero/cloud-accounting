@@ -29,6 +29,7 @@
 
 # Standard python libs
 import ast
+from  decimal import Decimal
 import gzip
 import base64
 import mimetypes
@@ -107,6 +108,9 @@ class App():
         # MAIN LOOP
         # count the loops
         count=0
+        # some makeup for floats
+        ONEPLACE = Decimal(10) ** -1
+     
         while True:
             timestamp=int(time.time())
             count +=1
@@ -155,11 +159,11 @@ class App():
                logger.info('Creating summary for user '+user+'...')
                summary=db_plugin.get_summary(user,int(starttime))
                # convert resource times in days from seconds
-               usedcputime=summary['cpu-time']/86400
-               usedmemtime=summary['memory-time']/86400
-               useddisktime=summary['disk-time']/86400
+               usedcputime=float(summary['cpu-time'])/float(86400)
+               usedmemtime=float(summary['memory-time'])/float(86400)
+               useddisktime=float(summary['disk-time'])/float(86400)
                usedvms=summary['#vms']
-               # qui occhio a GMT...
+               # qui occhio a UTC...
                startday=time.strftime("%d/%m/%y %H:%M",time.localtime(summary['start']))
                if not summary['stop']:
                   stopday=time.strftime("%d/%m/%y %H:%M",time.localtime(timestamp))
@@ -171,7 +175,7 @@ class App():
                   ustopday=summary['stop']
                if pub_sum:
                   logger.info('Publishing summary in queue \'summary\'...')
-                  summary_text='SUMMARY - user='+user+' #vms='+str(usedvms)+' cpu-time='+str(usedcputime)+' (cpus*days) memory-time='+str(usedmemtime)+' (MB*days) disk-time='+str(useddisktime)+' (MB*days) in period '+str(startday)+' - '+str(stopday)+'' 
+                  summary_text='SUMMARY - user='+user+' #vms='+str(usedvms)+' cpu-time='+str(Decimal(str(usedcputime)).quantize(ONEPLACE))+' (cpus*days) memory-time='+str(Decimal(str(usedmemtime)).quantize(ONEPLACE))+' (MB*days) disk-time='+str(Decimal(str(useddisktime)).quantize(ONEPLACE))+' (MB*days) in period '+str(startday)+' - '+str(stopday)+'' 
                   channel.basic_publish(exchange='',routing_key='summary',body=str(summary_text),properties=pika.BasicProperties(delivery_mode = 2))
                   logger.debug('Sent: '+str(summary)+'')
                   
@@ -184,8 +188,8 @@ class App():
                # Check if quota was exceeded
                logger.info('Checking if '+user+' has exceeded quota...')
                alarm=''
-               if usedcputime > maxcputime:
-                  alarm='CPU QUOTA ALARM - User *** '+user+' *** has used '+str(usedcputime)+'/'+str(maxcputime)+' cpus*day from '+str(startday)+' to '+str(stopday)+''
+               if usedcputime > (float(maxcputime)/float(86400)):
+                  alarm='CPU QUOTA ALARM - User *** '+user+' *** has used '+str(Decimal(str(usedcputime)).quantize(ONEPLACE))+'/'+str(Decimal(str(float(maxcputime)/float(86400))).quantize(ONEPLACE))+' cpus*day from '+str(startday)+' to '+str(stopday)+''
                   #logger.info(alarm)
                   logger.info('Publishing alarm in queue \'alarms\'...')
                   channel.basic_publish(exchange='',routing_key='alarms',body=alarm,properties=pika.BasicProperties(delivery_mode = 2))
