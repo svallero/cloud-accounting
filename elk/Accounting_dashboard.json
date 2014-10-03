@@ -121,17 +121,27 @@
       "list": {
         "0": {
           "from": "2014-10-02T11:30:12.000Z",
-          "to": "2014-10-03T11:12:52.000Z",
+          "to": "now",
           "type": "time",
           "field": "@timestamp",
           "mandate": "must",
           "active": true,
           "alias": "",
           "id": 0
+        },
+        "1": {
+          "type": "terms",
+          "field": "username.username.raw",
+          "value": "bes",
+          "mandate": "must",
+          "active": true,
+          "alias": "",
+          "id": 1
         }
       },
       "ids": [
-        0
+        0,
+        1
       ]
     }
   },
@@ -216,7 +226,7 @@
       "title": "IMAGES",
       "height": "300px",
       "editable": true,
-      "collapse": false,
+      "collapse": true,
       "collapsable": true,
       "panels": [
         {
@@ -409,7 +419,7 @@
       "title": "CPU TIME",
       "height": "300px",
       "editable": true,
-      "collapse": true,
+      "collapse": false,
       "collapsable": true,
       "panels": [
         {
@@ -493,7 +503,7 @@
       "title": "Memory time",
       "height": "300px",
       "editable": true,
-      "collapse": true,
+      "collapse": false,
       "collapsable": true,
       "panels": [
         {
@@ -585,7 +595,7 @@
           "editable": true,
           "type": "histogram",
           "loadingEditor": false,
-          "mode": "mean",
+          "mode": "total",
           "time_field": "time_axis",
           "value_field": "val",
           "x-axis": true,
@@ -762,9 +772,9 @@
               "desc"
             ]
           },
-          "auto_int": true,
+          "auto_int": false,
           "resolution": 100,
-          "interval": "10m",
+          "interval": "30m",
           "intervals": [
             "auto",
             "1s",
@@ -797,7 +807,7 @@
           "percentage": false,
           "zerofill": true,
           "derivative": false,
-          "integral": true,
+          "integral": false,
           "tooltip": {
             "value_type": "cumulative",
             "query_as_alias": true
@@ -836,9 +846,9 @@
               "desc"
             ]
           },
-          "auto_int": true,
+          "auto_int": false,
           "resolution": 100,
-          "interval": "10m",
+          "interval": "30m",
           "intervals": [
             "auto",
             "1s",
@@ -871,7 +881,7 @@
           "percentage": false,
           "zerofill": true,
           "derivative": false,
-          "integral": true,
+          "integral": false,
           "tooltip": {
             "value_type": "cumulative",
             "query_as_alias": true
@@ -883,7 +893,7 @@
           "editable": true,
           "type": "histogram",
           "loadingEditor": false,
-          "mode": "mean",
+          "mode": "total",
           "time_field": "time_axis",
           "value_field": "val",
           "x-axis": true,
@@ -912,7 +922,7 @@
           },
           "auto_int": false,
           "resolution": 100,
-          "interval": "3h",
+          "interval": "30m",
           "intervals": [
             "auto",
             "1s",
@@ -959,7 +969,7 @@
       "title": "Hosts",
       "height": "300px",
       "editable": true,
-      "collapse": true,
+      "collapse": false,
       "collapsable": true,
       "panels": [
         {
@@ -1205,7 +1215,7 @@
         "1d"
       ],
       "timefield": "@timestamp",
-      "now": false,
+      "now": true,
       "filter_id": 0
     }
   ],
