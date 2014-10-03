@@ -50,7 +50,7 @@ mkdir -p $pid_dir
 chown mnemos:mnemos $pid_dir
 
 # change permissions to config files
-chown -R root:mnemos /etc/mnemos
+chown -R mnemos:mnemos /etc/mnemos
 chmod 644 /etc/mnemos/quotas.cfg
 chmod 640 /etc/mnemos/mnemos.cfg
 
